@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Основные определения и квиз — Практики 2 и 3</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="index.html">Безопасность ОС • Практики 2 и 3</a>
+      <nav class="nav">
+        <a href="index.html">Главная</a>
+        <a href="practice2.html">Практика 2 (Процессы)</a>
+        <a href="practice3.html">Практика 3 (Синхронизация)</a>
+        <a href="definitions.html">Определения и квиз</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h1>Основные определения и самопроверка</h1>
+      <p>
+        Все ключевые термины из практик № 2 и № 3. Нажмите на любую карточку ниже, чтобы открыть ответ и проверить себя перед защитой.
+      </p>
+    </section>
+
+    <input id="defSearch" class="search-box" type="text" placeholder="Поиск по определениям (например: PID, демон, семафор, гонка, мьютекс)..." />
+
+    <div class="pill-tabs">
+      <button class="pill-tab active" onclick="filterTopic('all', this)">Все</button>
+      <button class="pill-tab" onclick="filterTopic('p2', this)">Практика 2 (Процессы)</button>
+      <button class="pill-tab" onclick="filterTopic('p3', this)">Практика 3 (Синхронизация)</button>
+    </div>
+
+    <section class="grid" id="cardsGrid">
+      <article class="flashcard" data-topic="p2" onclick="this.classList.toggle('open')">
+        <span class="badge badge-green">Практика 2</span>
+        <h3>Программа vs Процесс</h3>
+        <div class="answer">
+          <strong>Программа</strong> — статический объект (файл с кодом и данными на диске).<br/>
+          <strong>Процесс</strong> — динамический объект, программа в стадии выполнения со своими ресурсами и адресным пространством.
+        </div>
+      </article>
+
+      <article class="flashcard" data-topic="p2" onclick="this.classList.toggle('open')">
+        <span class="badge badge-green">Практика 2</span>
+        <h3>Демон (Daemon) и Job</h3>
+        <div class="answer">
+          <strong>Демон</strong> — фоновый процесс, не привязанный к терминалу (управляется, например, через <code>systemctl</code>).<br/>
+          <strong>Job (задание)</strong> — процесс, запущенный пользователем в оболочке, который не является демоном.
+        </div>
+      </article>
+
+      <article class="flashcard" data-topic="p2" onclick="this.classList.toggle('open')">
+        <span class="badge badge-green">Практика 2</span>
+        <h3>Атрибуты процесса (PID, PPID, UID, STAT)</h3>
+        <div class="answer">
+          <code>PID</code> — уникальный номер процесса (в Linux 0 — ядро, 1 — <code>systemd/init</code>);<br/>
+          <code>PPID</code> — PID родительского процесса;<br/>
+          <code>UID</code> — пользователь-владелец;<br/>
+          <code>STAT</code> — состояние (<code>R</code>, <code>S</code>, <code>I</code>, <code>D</code>, <code>Z</code>, <code>T</code>).
+        </div>
+      </article>
+
+      <article class="flashcard" data-topic="p2" onclick="this.classList.toggle('open')">
+        <span class="badge badge-green">Практика 2</span>
+        <h3>Порождение процессов в Linux</h3>
+        <div class="answer">
+          Все процессы порождаются другими процессами через системные вызовы <code>fork()</code> (копия процесса),
+          <code>vfork()</code>, <code>clone()</code> (процесс или поток) и <code>exec()</code> (загрузка новой программы).
+        </div>
+      </article>
+
+      <article class="flashcard" data-topic="p2" onclick="this.classList.toggle('open')">
+        <span class="badge badge-green">Практика 2</span>
+        <h3>Взаимодействие процессов (IPC)</h3>
+        <div class="answer">
+          Организуется через сигналы (<code>kill</code>), каналы (<code>pipe</code> / FIFO), общую память,
+          очереди сообщений, сокеты, а также семафоры и мьютексы.
+        </div>
+      </article>
+
+      <article class="flashcard" data-topic="p2" onclick="this.classList.toggle('open')">
+        <span class="badge badge-green">Практика 2</span>
+        <h3>Параметр «бездействие системы» (idle)</h3>
+        <div class="answer">
+          Доля времени процессора (<code>id</code> в <code>top</code>), когда ЦП простаивает без задач.
+          Для процесса состояние <code>I</code> в <code>STAT</code> означает, что процесс спит более 20 секунд.
+        </div>
+      </article>
+
+      <article class="flashcard" data-topic="p3" onclick="this.classList.toggle('open')">
+        <span class="badge badge-warn">Практика 3</span>
+        <h3>Планирование потоков</h3>
+        <div class="answer">
+          Работа ОС по определению момента смены активного потока и выбору следующего потока из очереди готовых
+          на основе приоритетов и дескрипторов.
+        </div>
+      </article>
+
+      <article class="flashcard" data-topic="p3" onclick="this.classList.toggle('open')">
+        <span class="badge badge-warn">Практика 3</span>
+        <h3>Семафор (Semaphore)</h3>
+        <div class="answer">
+          Объект синхронизации со счётчиком, ограничивающий число потоков, одновременно имеющих доступ к ресурсу.
+          При захвате (<code>acquire</code>) счётчик уменьшается, при освобождении (<code>release</code>) — увеличивается.
+        </div>
+      </article>
+
+      <article class="flashcard" data-topic="p3" onclick="this.classList.toggle('open')">
+        <span class="badge badge-warn">Практика 3</span>
+        <h3>Мьютекс (Mutex)</h3>
+        <div class="answer">
+          Объект взаимного исключения для защиты общего ресурса: одновременно к ресурсу допускается только
+          <strong>один</strong> поток. Пока он работает, остальные ожидают освобождения мьютекса.
+        </div>
+      </article>
+
+      <article class="flashcard" data-topic="p3" onclick="this.classList.toggle('open')">
+        <span class="badge badge-warn">Практика 3</span>
+        <h3>Событие (Event)</h3>
+        <div class="answer">
+          Объект синхронизации с двумя состояниями (сигнальное / несигнальное). Позволяет заблокировать потоки
+          через <code>wait()</code>, пока другой поток не установит сигнал методом <code>set()</code>.
+        </div>
+      </article>
+
+      <article class="flashcard" data-topic="p3" onclick="this.classList.toggle('open')">
+        <span class="badge badge-warn">Практика 3</span>
+        <h3>Состояние гонки (Race Condition)</h3>
+        <div class="answer">
+          Ошибка многопоточности, когда несколько потоков одновременно читают и изменяют общие данные без синхронизации,
+          из-за чего результат зависит от случайного порядка их выполнения.
+        </div>
+      </article>
+
+      <article class="flashcard" data-topic="p3" onclick="this.classList.toggle('open')">
+        <span class="badge badge-warn">Практика 3</span>
+        <h3>Взаимоблокировка (Deadlock)</h3>
+        <div class="answer">
+          Ситуация, при которой два или более потока бесконечно ждут освобождения ресурсов, захваченных друг другом,
+          и ни один не может продолжить работу.
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <footer class="footer">
+    Учебный сайт по курсу «Безопасность ОС» • Определения и самопроверка
+  </footer>
+
+  <script src="app.js"></script>
+  <script>
+    let activeTopic = "all";
+    const searchEl = document.getElementById("defSearch");
+    const cards = document.querySelectorAll(".flashcard");
+
+    function applyFilter() {
+      const q = searchEl.value.trim().toLowerCase();
+      cards.forEach((c) => {
+        const matchTopic = activeTopic === "all" || c.dataset.topic === activeTopic;
+        const matchText = c.textContent.toLowerCase().includes(q);
+        c.style.display = matchTopic && matchText ? "" : "none";
+      });
+    }
+
+    function filterTopic(topic, btn) {
+      activeTopic = topic;
+      document.querySelectorAll(".pill-tab").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      applyFilter();
+    }
+
+    searchEl.addEventListener("input", applyFilter);
+  </script>
+</body>
+</html>
