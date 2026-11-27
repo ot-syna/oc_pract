@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Текст для отчёта и защиты — Практики 2 и 3</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="index.html">Безопасность ОС • Шпаргалка</a>
+      <nav class="nav">
+        <a href="index.html">Главная</a>
+        <a href="definitions.html">Определения</a>
+        <a href="speech.html">Текст для отчёта</a>
+        <a href="questions.html">Ответы на вопросы</a>
+        <a href="python-code.html">Код на Python</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h1>Текст для выступления по отчётам</h1>
+      <p>
+        Готовая речь для защиты Практики № 2 и Практики № 3 перед преподавателем (на 1,5–2 минуты каждая).
+      </p>
+    </section>
+
+    <section class="card" style="margin-bottom: 22px;">
+      <span class="badge badge-green">Практика 2</span>
+      <h2>Как рассказывать Практику № 2 («Операции над процессами»)</h2>
+      <p style="margin-top: 10px;">
+        «Здравствуйте. Практическая работа № 2 посвящена операциям над процессами в операционной системе Linux (выполнялась в Ubuntu).
+      </p>
+      <p style="margin-top: 10px;">
+        В <strong>первом задании</strong> я рассмотрел два способа мониторинга и завершения процессов: через графический «Системный монитор» (вкладки «Процессы» и «Ресурсы») и через терминал — с повышением прав командой <code>sudo -s</code>, просмотром списка процессов через <code>ps aux</code> и завершением процесса по PID командой <code>kill</code>.
+      </p>
+      <p style="margin-top: 10px;">
+        Во <strong>втором задании</strong> отработал управление заданиями оболочки в фоне и на переднем плане: запускал процессы с <code>&amp;</code>, приостанавливал через <code>Ctrl+Z</code>, проверял список командой <code>jobs</code>, переводил в фон через <code>bg</code>, возвращал на передний план через <code>fg</code> и <code>fg %1</code> и завершал через <code>Ctrl+C</code>.
+      </p>
+      <p style="margin-top: 10px;">
+        В <strong>третьем и четвёртом заданиях</strong> использовал команды <code>ps</code> и <code>pgrep</code> для фильтрации и сортировки процессов: <code>ps -f</code> для полного формата, <code>ps -eo pid,comm --sort=-pid</code> для вывода выбранных столбцов с сортировкой по убыванию PID, <code>ps -e</code> для всех процессов, а также <code>pgrep</code> с ключами <code>-l</code>, <code>-lu</code> (по пользователю) и <code>-af</code> (по полной командной строке).
+      </p>
+      <p style="margin-top: 10px;">
+        В <strong>пятом задании</strong> и в <strong>дополнительной части</strong> вывел таблицу сигналов <code>kill -l</code>, проверил отправку сигналов по PID (<code>-15</code> SIGTERM, <code>-19</code> SIGSTOP, <code>-18</code> SIGCONT и <code>-9</code> SIGKILL), перезапуск системной службы <code>cron</code> через <code>systemctl reload-or-restart</code> и просмотр памяти командой <code>free</code> (<code>-t</code>, <code>-m</code>).
+      </p>
+      <p style="margin-top: 10px;">
+        В <strong>заключении</strong> написал скрипт на Python <code>thread_demo.py</code> с модулем <code>threading</code>, который создаёт дочерний поток внутри главного процесса и выводит PID процесса и Native ID потока».
+      </p>
+    </section>
+
+    <section class="card" style="margin-bottom: 22px;">
+      <span class="badge badge-warn">Практика 3</span>
+      <h2>Как рассказывать Практику № 3 («Синхронизация потоков»)</h2>
+      <p style="margin-top: 10px;">
+        «Практическая работа № 3 посвящена синхронизации потоков в контрольных точках с помощью семафоров. Работа выполнена на Python в Ubuntu Linux с использованием модуля <code>threading</code> для обоих вариантов схем.
+      </p>
+      <p style="margin-top: 10px;">
+        Для контроля прохождения точек я реализовал класс <code>PointSemaphore</code>. В нём бинарный семафор <code>threading.Semaphore(1)</code> выступает критической секцией — он защищает счётчик вошедших потоков и вывод в консоль, чтобы потоки не перемешивали строки. Когда счётчик <code>self.count</code> достигает нужного числа потоков <code>target_count</code> для данной точки, срабатывает событие <code>threading.Event()</code>, которое открывает путь следующим потокам.
+      </p>
+      <p style="margin-top: 10px;">
+        В <strong>Варианте 1</strong> (<code>sync_sem.py</code>) настроены 4 точки: в Точку 1 входит <code>A</code> (1 поток), в Точку 2 — <code>B</code> и <code>C</code> (2 потока), в Точку 3 — <code>D, E, F, J</code> (4 потока), в Точку 4 — <code>G, H, I</code> (3 потока), после чего запускается финальный поток <code>K</code>.
+      </p>
+      <p style="margin-top: 10px;">
+        В <strong>Варианте 2</strong> (<code>sync_var2_new.py</code>) поток <code>J</code> по схеме идёт не в третью, а во вторую точку, поэтому в Точку 2 входят 3 потока (<code>B, C, J</code>), в Точку 3 — 3 потока (<code>D, E, F</code>), и в Точку 4 — тоже 3 потока (<code>G, H, I</code>).
+      </p>
+      <p style="margin-top: 10px;">
+        На скриншотах вывода видно, что в обоих вариантах ни один следующий поток не стартует раньше, чем все предыдущие потоки не пройдут свою контрольную точку, и программа корректно доходит до <code>K</code> и <code>The End</code>».
+      </p>
+    </section>
+
+    <section class="card">
+      <h3>3 главных совета на защите</h3>
+      <ul style="padding-left: 20px; margin-top: 8px;">
+        <li><strong>Не читайте с листа</strong> — смотрите на схему или скриншот в отчёте и своими словами объясняйте, что там происходит.</li>
+        <li><strong>Называйте конкретные команды и классы</strong> (<code>ps -eo</code>, <code>pgrep -af</code>, <code>kill -15/-9</code>, <code>PointSemaphore</code>, <code>Event</code>).</li>
+        <li><strong>Объясняйте «зачем»</strong>: не просто «ввёл <code>kill -19</code>», а «приостановил процесс сигналом <code>SIGSTOP</code>».</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="footer">
+    Шпаргалка по курсу «Безопасность ОС» • Текст для отчёта
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

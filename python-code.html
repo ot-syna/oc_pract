@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Как работает код на Python — Практики 2 и 3</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="index.html">Безопасность ОС • Шпаргалка</a>
+      <nav class="nav">
+        <a href="index.html">Главная</a>
+        <a href="definitions.html">Определения</a>
+        <a href="speech.html">Текст для отчёта</a>
+        <a href="questions.html">Ответы на вопросы</a>
+        <a href="python-code.html">Код на Python</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h1>Как работает код на Python</h1>
+      <p>
+        Разбор скриптов из обоих отчётов: <code>thread_demo.py</code> (Практика № 2) и <code>sync_sem.py</code> / <code>sync_var2_new.py</code> (Практика № 3) + пошаговый симулятор.
+      </p>
+    </section>
+
+    <section class="card" style="margin-bottom: 22px;">
+      <span class="badge badge-green">Практика 2</span>
+      <h2>1. Скрипт <code>thread_demo.py</code> — создание потока в системе</h2>
+      <div class="terminal" style="min-height: auto; margin: 12px 0;">import threading
+import time
+import os
+
+def worker():
+    print(f"Поток запущен! ID потока (Native ID): {threading.get_native_id()}")
+    time.sleep(20)
+    print("Поток завершил работу.")
+
+print(f"Главный процесс запущен. PID: {os.getpid()}")
+t = threading.Thread(target=worker, name="MyWorkerThread")
+t.start()
+t.join()</div>
+      <ul style="padding-left: 20px;">
+        <li><code>os.getpid()</code> — возвращает PID главного процесса Python в ОС (например, <code>4852</code>).</li>
+        <li><code>threading.Thread(target=worker, name="MyWorkerThread")</code> — создаёт объект нового потока, который выполнит функцию <code>worker</code>.</li>
+        <li><code>t.start()</code> — реально запускает поток на уровне ОС.</li>
+        <li><code>threading.get_native_id()</code> — возвращает системный ID потока (TID), который в Linux отличается от PID главного процесса (например, <code>4854</code>), но принадлежит тому же процессу.</li>
+        <li><code>time.sleep(20)</code> — держит поток живым 20 секунд, чтобы его можно было увидеть в системе.</li>
+        <li><code>t.join()</code> — заставляет главный процесс дождаться завершения дочернего потока, прежде чем выйти.</li>
+      </ul>
+    </section>
+
+    <section class="card" style="margin-bottom: 22px;">
+      <span class="badge badge-warn">Практика 3</span>
+      <h2>2. Класс <code>PointSemaphore</code> (Вариант 1 и Вариант 2)</h2>
+      <div class="terminal" style="min-height: auto; margin: 12px 0;">class PointSemaphore:
+    def __init__(self, target_count):
+        self.sem = threading.Semaphore(1)   # 1. Бинарный семафор (критическая секция)
+        self.count = 0                      # 2. Счётчик потоков, прошедших точку
+        self.target_count = target_count    # 3. Сколько потоков нужно для открытия точки
+        self.all_done = threading.Event()   # 4. Событие-барьер для следующих потоков
+
+    def pass_point(self, name):
+        print(f"Поток '{name}' начался и ожидает семафор.")
+        time.sleep(random.uniform(0.2, 0.8))
+
+        self.sem.acquire()                  # Захват семафора (входит только 1 поток)
+        print(f"Поток '{name}' захватывает семафор.")
+        print(f"Поток '{name}' в семафоре.")
+
+        current_val = self.count
+        self.count += 1
+        print(f"Переменная семафора равна: {current_val}. Поток '{name}' выходит из семафора.")
+
+        if self.count == self.target_count: # Если пришли ВСЕ нужные потоки —
+            self.all_done.set()             # открываем барьер для следующих потоков!
+
+        self.sem.release()                  # Освобождение семафора</div>
+
+      <h3 style="margin-top: 16px;">Как работают функции потоков:</h3>
+      <ul style="padding-left: 20px; margin-top: 8px;">
+        <li><code>run_A()</code> — сразу вызывает <code>point1.pass_point("A")</code>. После него <code>point1.all_done.set()</code> открывает Точку 1.</li>
+        <li><code>run_after_p1(name, target_point)</code> — вызывает <code>point1.all_done.wait()</code> (ждёт завершения Точки 1), затем поток идёт в свою целевую точку (<code>point2</code>, <code>point3</code> или <code>point4</code>).</li>
+        <li><code>run_after_p2(name)</code> — ждёт <code>point2.all_done.wait()</code>, затем проходит <code>point3</code> (потоки <code>D, E, F</code>).</li>
+        <li><code>run_after_p3(name)</code> — ждёт <code>point3.all_done.wait()</code>, затем проходит <code>point4</code> (потоки <code>G, H</code>).</li>
+        <li><code>run_K()</code> — ждёт <code>point4.all_done.wait()</code> и завершает программу (<code>The End</code>).</li>
+      </ul>
+
+      <table style="margin-top: 16px;">
+        <thead>
+          <tr><th>Контрольная точка</th><th>Вариант 1 (<code>sync_sem.py</code>)</th><th>Вариант 2 (<code>sync_var2_new.py</code>)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Точка 1</td><td><code>A</code> (target = 1)</td><td><code>A</code> (target = 1)</td></tr>
+          <tr><td>Точка 2</td><td><code>B, C</code> (target = <strong>2</strong>)</td><td><code>B, C, J</code> (target = <strong>3</strong>)</td></tr>
+          <tr><td>Точка 3</td><td><code>D, E, F, J</code> (target = <strong>4</strong>)</td><td><code>D, E, F</code> (target = <strong>3</strong>)</td></tr>
+          <tr><td>Точка 4</td><td><code>G, H, I</code> (target = 3)</td><td><code>G, H, I</code> (target = 3)</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>3. Пошаговая симуляция работы кода (Практика 3)</h2>
+      <div class="pill-tabs" style="margin-top: 10px;">
+        <button id="tabV1" class="pill-tab active" onclick="setVariant(1)">Вариант 1 (J → Точка 3)</button>
+        <button id="tabV2" class="pill-tab" onclick="setVariant(2)">Вариант 2 (J → Точка 2)</button>
+      </div>
+      <p id="varDesc" style="color: var(--text-muted); margin-bottom: 10px;"></p>
+
+      <div class="controls">
+        <button class="btn btn-sm" onclick="stepSim()">Следующий шаг →</button>
+        <button class="btn btn-sm btn-success" onclick="autoSim()">Автозапуск</button>
+        <button class="btn btn-sm btn-outline" onclick="resetSim()">Сбросить</button>
+      </div>
+
+      <div class="point-row" id="pointsGrid"></div>
+      <div id="simLog" class="terminal" style="min-height: 150px;"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    Шпаргалка по курсу «Безопасность ОС» • Как работает код на Python
+  </footer>
+
+  <script src="app.js"></script>
+  <script>
+    const CONFIGS = {
+      1: {
+        desc: "Вариант 1: из Точки 1 поток J идёт сразу в Точку 3, а I — в Точку 4.",
+        points: [
+          { name: "Точка 1", target: 1, incoming: ["A"] },
+          { name: "Точка 2", target: 2, incoming: ["B", "C"] },
+          { name: "Точка 3", target: 4, incoming: ["D", "E", "F", "J"] },
+          { name: "Точка 4", target: 3, incoming: ["G", "H", "I"] }
+        ],
+        steps: [
+          { p: 0, t: "A" },
+          { p: 1, t: "B" }, { p: 1, t: "C" }, { p: 2, t: "J" }, { p: 3, t: "I" },
+          { p: 2, t: "D" }, { p: 2, t: "E" }, { p: 2, t: "F" },
+          { p: 3, t: "G" }, { p: 3, t: "H" },
+          { final: true }
+        ]
+      },
+      2: {
+        desc: "Вариант 2: из Точки 1 поток J идёт в Точку 2 (вместе с B и C), а I — в Точку 4.",
+        points: [
+          { name: "Точка 1", target: 1, incoming: ["A"] },
+          { name: "Точка 2", target: 3, incoming: ["B", "C", "J"] },
+          { name: "Точка 3", target: 3, incoming: ["D", "E", "F"] },
+          { name: "Точка 4", target: 3, incoming: ["G", "H", "I"] }
+        ],
+        steps: [
+          { p: 0, t: "A" },
+          { p: 1, t: "B" }, { p: 1, t: "C" }, { p: 1, t: "J" }, { p: 3, t: "I" },
+          { p: 2, t: "D" }, { p: 2, t: "E" }, { p: 2, t: "F" },
+          { p: 3, t: "G" }, { p: 3, t: "H" },
+          { final: true }
+        ]
+      }
+    };
+
+    let currentVar = 1;
+    let stepIdx = 0;
+    let counts = [0, 0, 0, 0];
+    let passed = [[], [], [], []];
+    let timer = null;
+    const logEl = document.getElementById("simLog");
+    const gridEl = document.getElementById("pointsGrid");
+
+    function setVariant(v) {
+      currentVar = v;
+      document.getElementById("tabV1").classList.toggle("active", v === 1);
+      document.getElementById("tabV2").classList.toggle("active", v === 2);
+      resetSim();
+    }
+
+    function renderPoints() {
+      const cfg = CONFIGS[currentVar];
+      document.getElementById("varDesc").textContent = cfg.desc;
+      gridEl.innerHTML = cfg.points.map((pt, idx) => {
+        const isDone = counts[idx] >= pt.target;
+        const isActive = counts[idx] > 0 && !isDone;
+        const cls = isDone ? "done" : (isActive ? "active" : "");
+        const chips = pt.incoming.map((name) => {
+          const ok = passed[idx].includes(name);
+          return `<span class="thread-chip ${ok ? "passed" : ""}">${name}</span>`;
+        }).join("");
+        return `
+          <div class="point-card ${cls}">
+            <strong>${pt.name}</strong> (цель: ${counts[idx]}/${pt.target})<br/>
+            <div style="margin: 6px 0;">${chips}</div>
+            <small>Event: ${isDone ? "SET (открыто)" : "WAIT (ждём)"}</small>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function appendLog(txt) {
+      logEl.innerHTML += txt + "\n";
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function stepSim() {
+      const cfg = CONFIGS[currentVar];
+      if (stepIdx >= cfg.steps.length) {
+        if (timer) { clearInterval(timer); timer = null; }
+        return;
+      }
+      const st = cfg.steps[stepIdx++];
+      if (st.final) {
+        appendLog('<span class="info">\nПоток \'K\' начался.\nThe End</span>');
+        if (timer) { clearInterval(timer); timer = null; }
+        return;
+      }
+      const pt = cfg.points[st.p];
+      const prev = counts[st.p];
+      counts[st.p]++;
+      passed[st.p].push(st.t);
+      appendLog(
+        `Поток '${st.t}' захватывает семафор (${pt.name}). ` +
+        `Переменная семафора: ${prev}. Поток '${st.t}' выходит.` +
+        (counts[st.p] === pt.target ? ` <span class="prompt">[${pt.name}: all_done.set()!]</span>` : "")
+      );
+      renderPoints();
+    }
+
+    function autoSim() {
+      if (timer) return;
+      timer = setInterval(stepSim, 650);
+    }
+
+    function resetSim() {
+      if (timer) { clearInterval(timer); timer = null; }
+      stepIdx = 0;
+      counts = [0, 0, 0, 0];
+      passed = [[], [], [], []];
+      logEl.innerHTML = '<span class="info">Нажмите «Следующий шаг» или «Автозапуск» для симуляции...</span>\n';
+      renderPoints();
+    }
+
+    resetSim();
+  </script>
+</body>
+</html>
